@@ -1,45 +1,31 @@
 package com.project.nisum.app.dto.response;
 
-import java.util.List;
+import lombok.Data;
 
+import java.sql.Timestamp;
+import java.util.UUID;
+
+@Data
 public class UserInfoResponse {
-    private Long id;
+    private UUID id;
     private String username;
     private String email;
-    private List<String> roles;
+    private String token;
+    private Timestamp created;
+    private Timestamp modified;
+    private Timestamp last_login;
+    private boolean isactive;
 
-    public UserInfoResponse(Long id, String username, String email) {
+    public UserInfoResponse(UUID id, String email,
+                            String token, Timestamp created, Timestamp modified,
+                            Timestamp last_login, boolean isactive) {
         this.id = id;
-        this.username = username;
         this.email = email;
-        this.roles = roles;
+        this.token = token;
+        this.created = created;
+        this.modified = modified;
+        this.last_login = last_login;
+        this.isactive = isactive;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public List<String> getRoles() {
-        return roles;
-    }
 }

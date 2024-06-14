@@ -21,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.management.relation.Role;
+import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -49,7 +50,7 @@ public class AuthController {
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
         Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+                .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -57,14 +58,17 @@ public class AuthController {
 
         ResponseCookie jwtCookie = jwtUtils.generateJwtCookie(userDetails);
 
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
-                .collect(Collectors.toList());
+        String token = jwtCookie.getValue();
 
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-                .body(new UserInfoResponse(Long.valueOf(1),
-                        userDetails.getUsername(),
-                        "jorgechilcon@gmail.com"));
+                .body(new UserInfoResponse(userDetails.getId(),
+                        userDetails.getEmail(),
+                        token,
+                        userDetails.getCreated(),
+                        userDetails.getCreated(),
+                        userDetails.getCreated(),
+                        true
+                ));
 
 
     }
@@ -76,24 +80,24 @@ public class AuthController {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
         }
 
+        //usar patron builder
         // Create new user's account
+
+        //obtener fecha y hora:
+
+        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+
         User user = new User(
                 signUpRequest.getId(),
                 signUpRequest.getName(),
                 signUpRequest.getEmail(),
+                currentTime,
                 encoder.encode(signUpRequest.getPassword()),
-                signUpRequest.getPhones(),
-                signUpRequest.getUsername()
+                signUpRequest.getPhones()
         );
 
         userRepository.save(user);
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
 
-    @PostMapping("/signout")
-    public ResponseEntity<?> logoutUser() {
-        ResponseCookie cookie = jwtUtils.getCleanJwtCookie();
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(new MessageResponse("You've been signed out!"));
-    }
 }

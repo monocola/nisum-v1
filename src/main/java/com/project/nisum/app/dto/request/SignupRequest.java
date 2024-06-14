@@ -2,6 +2,7 @@ package com.project.nisum.app.dto.request;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import com.project.nisum.app.models.Phone;
 import jakarta.validation.constraints.*;
@@ -10,11 +11,7 @@ import lombok.Data;
 @Data
 public class SignupRequest {
 
-    private Long id;
-
-    @NotBlank
-    @Size(min = 3, max = 20)
-    private String username;
+    private UUID id;
 
     @NotBlank
     @Size(min = 3, max = 20)

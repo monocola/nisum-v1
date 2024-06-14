@@ -15,8 +15,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.GenericGenerator;
 
+import java.sql.Timestamp;
 import java.util.List;
+import java.util.UUID;
 
 
 @Entity
@@ -31,8 +34,18 @@ import java.util.List;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(
+            name = "UUID",
+            strategy = "org.hibernate.id.UUIDGenerator",
+            parameters = {
+                    @org.hibernate.annotations.Parameter(
+                            name = "uuid_gen_strategy_class",
+                            value = "org.hibernate.id.uuid.CustomVersionOneStrategy"
+                    )
+            }
+    )
+     private UUID id;
 
     @NotBlank
     @Size(max = 30)
@@ -42,6 +55,7 @@ public class User {
     @Size(max = 50)
     @Email
     private String email;
+    private Timestamp created;
 
     @NotBlank
     @Size(max = 100)
@@ -50,8 +64,5 @@ public class User {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Phone> phones;
 
-    @NotBlank
-    @Size(max = 20)
-    private String username;
 
 }
