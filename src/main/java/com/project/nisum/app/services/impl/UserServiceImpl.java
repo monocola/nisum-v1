@@ -40,6 +40,7 @@ public class UserServiceImpl  implements UserService {
     @Autowired
     AuthenticationManager authenticationManager;
 
+
     @Override
     public void createUserAndPhones(SignupRequest signUpRequest) {
         Timestamp currentTime = new Timestamp(System.currentTimeMillis());
@@ -89,7 +90,21 @@ public class UserServiceImpl  implements UserService {
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(email, password));
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        return (UserDetailsImpl) authentication.getPrincipal();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        // Generate JWT token
+        ResponseCookie jwtCookie = jwtUtils.generateJwtCookie(userDetails);
+        String token = jwtCookie.getValue();
+
+        // Update last login time and token
+        User user = userRepository.findById(userDetails.getId()).orElse(null);
+        if (user != null) {
+            user.setLastLogin(new Timestamp(System.currentTimeMillis()));
+            user.setToken(token); // Set the token
+            userRepository.save(user);
+        }
+
+        return userDetails;
     }
 
     @Override
@@ -99,9 +114,14 @@ public class UserServiceImpl  implements UserService {
                 .setEmail(userDetails.getEmail())
                 .setToken(token)
                 .setCreated(userDetails.getCreated())
-                .setModified(userDetails.getCreated())
-                .setLastLogin(userDetails.getCreated())
-                .setIsActive(true)
+                .setModified(userDetails.getModified())
+                .setLastLogin(userDetails.getLast_login())
+                .setIsActive(userDetails.getIsactive())
                 .build();
+
+
     }
+
+
+
 }

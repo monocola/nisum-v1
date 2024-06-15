@@ -15,4 +15,5 @@ public interface UserService {
     public UserDetailsImpl authenticateAndGetUserDetails(String email, String password);
     public UserInfoResponse buildUserInfoResponse(UserDetailsImpl userDetails, String token);
 
+
 }

@@ -31,6 +31,9 @@ public class UserDetailsImpl implements UserDetails {
     }
 
     private Timestamp created;
+    private Timestamp modified;
+    private Timestamp last_login;
+    private Boolean isactive;
 
 
     @Override
@@ -44,11 +47,16 @@ public class UserDetailsImpl implements UserDetails {
     }
 
 
-    public UserDetailsImpl(UUID id, String username, String email, String password, Timestamp created) {
+    public UserDetailsImpl(UUID id, String username,
+                           String email, String password, Timestamp created,
+                           Timestamp modified, Timestamp last_login, Boolean isactive) {
         this.id = id;
         this.email = email;
         this.password = password;
         this.created = created;
+        this.modified = modified;
+        this.last_login = last_login;
+        this.isactive = isactive;
     }
 
     public static UserDetailsImpl build(User user) {
@@ -58,8 +66,10 @@ public class UserDetailsImpl implements UserDetails {
                 user.getName(),
                 user.getEmail(),
                 user.getPassword(),
-                user.getCreated());
+                user.getCreated(),
+                user.getModified(),
+                user.getLastLogin(),
+                user.getIsActive());
     }
-
 
 }
