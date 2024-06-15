@@ -1,13 +1,19 @@
 package com.project.nisum.app.services.impl;
 
+import com.project.nisum.app.dto.request.SignupRequest;
 import com.project.nisum.app.models.User;
 import com.project.nisum.app.repositories.UserRepository;
-import org.springframework.security.core.userdetails.UserDetailsService;
+
+//import com.project.nisum.app.services.UserDetailsService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.sql.Timestamp;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
@@ -23,5 +29,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         return UserDetailsImpl.build(user);
     }
+
+
 
 }

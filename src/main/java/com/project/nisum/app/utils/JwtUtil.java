@@ -15,7 +15,7 @@ import java.security.Key;
 import java.util.Date;
 
 @Component
-public class JwtUtils {
+public class JwtUtil {
 
     @Value("${bezkoder.app.jwtSecret}")
     private String jwtSecret;

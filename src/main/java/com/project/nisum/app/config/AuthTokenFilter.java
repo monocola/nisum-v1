@@ -1,7 +1,7 @@
 package com.project.nisum.app.config;
 
 import com.project.nisum.app.services.impl.UserDetailsServiceImpl;
-import com.project.nisum.app.utils.JwtUtils;
+import com.project.nisum.app.utils.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,7 +18,7 @@ import java.io.IOException;
 public class AuthTokenFilter extends OncePerRequestFilter {
 
     @Autowired
-    private JwtUtils jwtUtils;
+    private JwtUtil jwtUtils;
 
     @Autowired
     private UserDetailsServiceImpl userDetailsService;

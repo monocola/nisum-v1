@@ -3,29 +3,19 @@ package com.project.nisum.app.controllers;
 import com.project.nisum.app.dto.request.LoginRequest;
 import com.project.nisum.app.dto.request.SignupRequest;
 import com.project.nisum.app.dto.response.MessageResponse;
-import com.project.nisum.app.dto.response.UserInfoResponse;
-import com.project.nisum.app.models.User;
-import com.project.nisum.app.repositories.UserRepository;
+import com.project.nisum.app.services.UserService;
 import com.project.nisum.app.services.impl.UserDetailsImpl;
-import com.project.nisum.app.utils.JwtUtils;
+import com.project.nisum.app.utils.Constant;
+import com.project.nisum.app.utils.JwtUtil;
+import com.project.nisum.app.validations.EmailValidation;
+import com.project.nisum.app.validations.PasswordValidation;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import javax.management.relation.Role;
-import java.sql.Timestamp;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -35,69 +25,44 @@ public class AuthController {
     AuthenticationManager authenticationManager;
 
     @Autowired
-    UserRepository userRepository;
-
-    //@Autowired
-    //RoleRepository roleRepository;
+    UserService userDetailsService;
 
     @Autowired
-    PasswordEncoder encoder;
+    JwtUtil jwtUtils;
 
     @Autowired
-    JwtUtils jwtUtils;
+    private EmailValidation emailValidationStrategy;
 
-    @PostMapping("/signin")
+    @Autowired
+    private PasswordValidation passwordValidationStrategy;
+
+    @PostMapping("/signIn")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-
-        Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-
+        UserDetailsImpl userDetails = userDetailsService.authenticateAndGetUserDetails(
+                loginRequest.getEmail(), loginRequest.getPassword());
         ResponseCookie jwtCookie = jwtUtils.generateJwtCookie(userDetails);
 
-        String token = jwtCookie.getValue();
-
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-                .body(new UserInfoResponse(userDetails.getId(),
-                        userDetails.getEmail(),
-                        token,
-                        userDetails.getCreated(),
-                        userDetails.getCreated(),
-                        userDetails.getCreated(),
-                        true
-                ));
-
-
+                .body(userDetailsService.buildUserInfoResponse(userDetails, jwtCookie.getValue()));
     }
 
-    @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
 
-        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
+    @PostMapping("/signUp")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+        if (userDetailsService.existsByEmail(signUpRequest.getEmail())) {
+            return ResponseEntity.badRequest().body(new MessageResponse(Constant.MESSAGE_EMAIL_EXISTS));
         }
 
-        //usar patron builder
-        // Create new user's account
+        if (!emailValidationStrategy.validate(signUpRequest.getEmail())) {
+            return ResponseEntity.badRequest().body(new MessageResponse(emailValidationStrategy.getErrorMessage()));
+        }
 
-        //obtener fecha y hora:
+        if (!passwordValidationStrategy.validate(signUpRequest.getPassword())) {
+            return ResponseEntity.badRequest().body(new MessageResponse(passwordValidationStrategy.getErrorMessage()));
+        }
 
-        Timestamp currentTime = new Timestamp(System.currentTimeMillis());
-
-        User user = new User(
-                signUpRequest.getId(),
-                signUpRequest.getName(),
-                signUpRequest.getEmail(),
-                currentTime,
-                encoder.encode(signUpRequest.getPassword()),
-                signUpRequest.getPhones()
-        );
-
-        userRepository.save(user);
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+        userDetailsService.createUserAndPhones(signUpRequest);
+        return ResponseEntity.ok(new MessageResponse(Constant.MESSAGE_USER_REGISTERED));
     }
 
 }
