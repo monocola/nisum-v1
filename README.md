@@ -90,6 +90,8 @@ POST /api/auth/signIn
 3. Maven
 4. Swagger para documentación de la API
 5. Programación Funcional.
+6. Base de Datos en Memoria H2.
+7. Buenas practicas de programación (clean Code).
 
 # Patrones de Diseño Utilizados
 1. Strategy
@@ -97,6 +99,7 @@ POST /api/auth/signIn
 3. Dto
 4. Factory
 5. AAA (Arrange, Act, Assert) para pruebas unitarias realizadas al 83% de cobertura.
+6. Solid
 
 # Ejecución
 Para ejecutar la aplicación:
