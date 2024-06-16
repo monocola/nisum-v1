@@ -12,7 +12,7 @@ public class Constant {
     /**
      * Error message indicating that the provided email has an invalid pattern.
      */
-    public static final String MESSAGE_EMAIL_PATTERN = "Error: El correo no es válido.";
+    public static final String MESSAGE_EMAIL_PATTERN = "Error: El formato del correo es inválido.";
 
     /**
      * Success message indicating that the user has been registered successfully.
@@ -41,5 +41,5 @@ public class Constant {
      * Error message indicating that the provided email is already in use.
      */
     public static final String MESSAGE = "Mensaje:";
-    public static final String MESSAGE_BAD_CREDENTIALS = "Credenciales Incorrectas.";
+    public static final String MESSAGE_BAD_CREDENTIALS = "Solicitud incorrecta.";
 }

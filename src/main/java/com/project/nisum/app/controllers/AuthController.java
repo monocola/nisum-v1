@@ -14,13 +14,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
 
 /**
  * AuthController is a REST controller for handling authentication requests.
@@ -72,19 +69,20 @@ public class AuthController {
     @PostMapping("/signUp")
     @Operation(summary = "Register a new user", description = "This endpoint is used for registering a new user")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-        try {
-            return Optional.of(signUpRequest)
-                    .filter(request -> !userDetailsService.existsByEmail(request.getEmail()))
-                    .filter(request -> emailValidationStrategy.validate(request.getEmail()))
-                    .filter(request -> passwordValidationStrategy.validate(request.getPassword()))
-                    .map(request -> {
-                        userDetailsService.createUserAndPhones(request);
-                        return ResponseEntity.ok(new MessageResponse(Constant.MESSAGE_USER_REGISTERED));
-                    })
-                    .orElse(ResponseEntity.badRequest().body(new MessageResponse("Error: Invalid request")));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponse(e.getMessage()));
+
+        if (userDetailsService.existsByEmail(signUpRequest.getEmail())) {
+            return ResponseEntity.badRequest().body(new MessageResponse(Constant.MESSAGE_EMAIL_EXISTS));
         }
+
+        if (!emailValidationStrategy.validate(signUpRequest.getEmail())) {
+            return ResponseEntity.badRequest().body(new MessageResponse(emailValidationStrategy.getErrorMessage()));
+        }
+
+        if (!passwordValidationStrategy.validate(signUpRequest.getPassword())) {
+            return ResponseEntity.badRequest().body(new MessageResponse(passwordValidationStrategy.getErrorMessage()));
+        }
+        userDetailsService.createUserAndPhones(signUpRequest);
+        return ResponseEntity.ok(new MessageResponse(Constant.MESSAGE_USER_REGISTERED));
     }
 
 }

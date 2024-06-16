@@ -46,7 +46,7 @@ POST /api/auth/signUp
 ```
 ```json
 {
-  "message": "Formato de correo electrónico incorrecto."
+  "message": "Error: La contraseña debe cumplir con las siguientes reglas: \nDebe contener al menos un dígito numérico. \nDebe contener al menos una letra minúscula. \nDebe contener al menos una letra mayúscula. \nDebe contener al menos uno de los siguientes caracteres especiales: @, #, $, %, ^, &, +, =. \nNo debe contener espacios en blanco. \nDebe tener una longitud de al menos 8 caracteres."
 }
 ```
 # Validaciones
@@ -81,7 +81,7 @@ POST /api/auth/signIn
 # Respuesta Fallida
 ```json
 {
-  "message": "Credenciales Incorrectas."
+  "message": "Solicitud incorrecta."
 }
 ```
 # Tecnologías Utilizadas
