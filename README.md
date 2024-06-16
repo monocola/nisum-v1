@@ -112,5 +112,8 @@ Para ejecutar la aplicación:
 2. Prueba los endpoints desde Swagger.
 3. Se ha documentado cada endpoint con su respectiva descripción, parámetros y respuestas.
 
+# Diagrama de Solucion:
+![diagrama_solucion.png](images/diagrama_solucion.png)
+
 # Autor
 Creado por Jorge Chilcón.
