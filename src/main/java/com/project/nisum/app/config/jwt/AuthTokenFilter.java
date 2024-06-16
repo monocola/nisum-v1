@@ -1,4 +1,4 @@
-package com.project.nisum.app.config;
+package com.project.nisum.app.config.jwt;
 
 import com.project.nisum.app.services.impl.UserDetailsServiceImpl;
 import com.project.nisum.app.utils.JwtUtil;
@@ -15,6 +15,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * AuthTokenFilter is a filter class that handles the authentication token.
+ * It extends the OncePerRequestFilter class from Spring Security.
+ */
 public class AuthTokenFilter extends OncePerRequestFilter {
 
     @Autowired
@@ -23,14 +27,24 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
 
+    /**
+     * Filters requests to authenticate users.
+     * @param request The HTTP request.
+     * @param response The HTTP response.
+     * @param filterChain The filter chain.
+     * @throws ServletException If a servlet exception occurred.
+     * @throws IOException If an input or output exception occurred.
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
             String jwt = parseJwt(request);
+            String path = request.getRequestURI();
+
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+
                 String email = jwtUtils.getUserNameFromJwtToken(jwt);
-                System.out.println("    username = " + email);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
                 UsernamePasswordAuthenticationToken authentication =
@@ -49,9 +63,13 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Parses the JWT from the HTTP request.
+     * @param request The HTTP request.
+     * @return The JWT.
+     */
     private String parseJwt(HttpServletRequest request) {
         String jwt = jwtUtils.getJwtFromCookies(request);
         return jwt;
     }
-
 }

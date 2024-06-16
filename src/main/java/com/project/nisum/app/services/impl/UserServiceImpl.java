@@ -1,12 +1,15 @@
 package com.project.nisum.app.services.impl;
 
 
+import com.project.nisum.app.builders.PhoneBuilder;
 import com.project.nisum.app.builders.UserBuilder;
 import com.project.nisum.app.dto.request.LoginRequest;
+import com.project.nisum.app.dto.request.PhoneRequest;
 import com.project.nisum.app.dto.request.SignupRequest;
 import com.project.nisum.app.dto.response.UserInfoResponse;
 import com.project.nisum.app.models.Phone;
 import com.project.nisum.app.models.User;
+import com.project.nisum.app.repositories.PhoneRepository;
 import com.project.nisum.app.repositories.UserRepository;
 import com.project.nisum.app.services.UserService;
 import com.project.nisum.app.utils.JwtUtil;
@@ -24,67 +27,138 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
+/**
+ * UserServiceImpl is a service class that implements the UserService interface.
+ * It provides methods for creating a user and their phones, loading a user by their email, checking if a user exists by email, getting user info, authenticating and getting user details, and building a user info response.
+ */
 @Service
 public class UserServiceImpl  implements UserService {
 
+
+    /**
+     * The UserRepository for accessing user data.
+     */
     @Autowired
     UserRepository userRepository;
 
+
+    /**
+     * The PhoneRepository for accessing phone data.
+     */
+    @Autowired
+    PhoneRepository phoneRepository;
+
+
+    /**
+     * The PasswordEncoder for encoding passwords.
+     */
     @Autowired
     PasswordEncoder encoder;
 
+
+    /**
+     * The JwtUtil for working with JWT tokens.
+     */
     @Autowired
     JwtUtil jwtUtils;
 
+
+    /**
+     * The AuthenticationManager for authenticating users.
+     */
     @Autowired
     AuthenticationManager authenticationManager;
 
 
+
+    /**
+     * Creates a user and their phones.
+     * @param signUpRequest The signup request containing the user and phone data.
+     */
     @Override
     public void createUserAndPhones(SignupRequest signUpRequest) {
         Timestamp currentTime = new Timestamp(System.currentTimeMillis());
-        List<Phone> phones = signUpRequest.getPhones();
+        List<PhoneRequest> phones = signUpRequest.getPhones();
 
         User user = new UserBuilder()
-                .setId(signUpRequest.getId())
                 .setName(signUpRequest.getName())
                 .setEmail(signUpRequest.getEmail())
                 .setModified(currentTime)
                 .setLastLogin(currentTime)
                 .setCreated(currentTime)
                 .setPassword(encoder.encode(signUpRequest.getPassword()))
-                .setPhones(phones)
                 .setIsActive(true)
                 .build();
 
-        phones.forEach(phone -> phone.setUser(user));
         userRepository.save(user);
+
+        List<Phone> phoneEntities = phones.stream().map(phoneRequest ->
+                new PhoneBuilder()
+                        .setNumber(phoneRequest.getNumber())
+                        .setCityCode(phoneRequest.getCityCode())
+                        .setCountryCode(phoneRequest.getCountryCode())
+                        .setUser(user)
+                        .build()
+        ).collect(Collectors.toList());
+
+        phoneRepository.saveAll(phoneEntities);
     }
 
+
+    /**
+     * Loads a user by their email.
+     * @param email The email of the user to load.
+     * @return The UserDetails of the loaded user.
+     * @throws UsernameNotFoundException if no user is found with the given email.
+     */
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User Not Found with email: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("Correo no encontrado: " + email));
 
         return UserDetailsImpl.build(user);
     }
 
+
+    /**
+     * Checks if a user exists with the given email.
+     * @param email The email to check.
+     * @return true if a user exists with the given email, false otherwise.
+     */
     @Override
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
     }
 
+
+    /**
+     * Gets the user info for the given login request.
+     * @param loginRequest The login request containing the user's email and password.
+     * @return The user info response.
+     */
     @Override
     public UserInfoResponse getUserInfo(LoginRequest loginRequest) {
-        UserDetailsImpl userDetails = authenticateAndGetUserDetails(loginRequest.getEmail(), loginRequest.getPassword());
-        ResponseCookie jwtCookie = jwtUtils.generateJwtCookie(userDetails);
-        String token = jwtCookie.getValue();
+    return Optional.of(loginRequest)
+            .map(request -> {
+                UserDetailsImpl userDetails = authenticateAndGetUserDetails(request.getEmail(), request.getPassword());
+                ResponseCookie jwtCookie = jwtUtils.generateJwtCookie(userDetails);
+                String token = jwtCookie.getValue();
+                return buildUserInfoResponse(userDetails, token);
+            })
+            .orElseThrow(() -> new IllegalArgumentException("Ocurrió un error al intentar logearse."));
+}
 
-        return buildUserInfoResponse(userDetails, token);
-    }
 
+    /**
+     * Authenticates a user and gets their details.
+     * @param email The user's email.
+     * @param password The user's password.
+     * @return The UserDetails of the authenticated user.
+     */
     @Override
     public UserDetailsImpl authenticateAndGetUserDetails(String email, String password) {
         Authentication authentication = authenticationManager
@@ -97,16 +171,23 @@ public class UserServiceImpl  implements UserService {
         String token = jwtCookie.getValue();
 
         // Update last login time and token
-        User user = userRepository.findById(userDetails.getId()).orElse(null);
-        if (user != null) {
-            user.setLastLogin(new Timestamp(System.currentTimeMillis()));
-            user.setToken(token); // Set the token
-            userRepository.save(user);
-        }
+        Optional.ofNullable(userRepository.findById(userDetails.getId()).orElse(null))
+                .ifPresent(user -> {
+                    user.setLastLogin(new Timestamp(System.currentTimeMillis()));
+                    user.setToken(token); // Set the token
+                    userRepository.save(user);
+                });
 
         return userDetails;
     }
 
+
+    /**
+     * Builds a user info response from the given UserDetails and token.
+     * @param userDetails The UserDetails to build from.
+     * @param token The token.
+     * @return The user info response.
+     */
     @Override
     public UserInfoResponse buildUserInfoResponse(UserDetailsImpl userDetails, String token) {
         return new UserInfoResponse.Builder()
