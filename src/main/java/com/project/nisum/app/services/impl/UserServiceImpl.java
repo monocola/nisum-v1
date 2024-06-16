@@ -150,7 +150,7 @@ public class UserServiceImpl  implements UserService {
                 return buildUserInfoResponse(userDetails, token);
             })
             .orElseThrow(() -> new IllegalArgumentException("Ocurrió un error al intentar logearse."));
-}
+    }
 
 
     /**
@@ -159,26 +159,57 @@ public class UserServiceImpl  implements UserService {
      * @param password The user's password.
      * @return The UserDetails of the authenticated user.
      */
-    @Override
+   @Override
     public UserDetailsImpl authenticateAndGetUserDetails(String email, String password) {
-        Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(email, password));
+        Authentication authentication = authenticateUser(email, password);
+        UserDetailsImpl userDetails = getUserDetails(authentication);
+        String token = generateJwtToken(userDetails);
+        updateUserLastLoginAndToken(userDetails, token);
+        return userDetails;
+    }
+
+    /**
+     * Authenticates a user with the given email and password.
+     * @param email The email of the user to authenticate.
+     * @param password The password of the user to authenticate.
+     * @return The Authentication of the authenticated user.
+     */
+    private Authentication authenticateUser(String email, String password) {
+        return authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+    }
+
+    /**
+     * Gets the UserDetails from the given Authentication.
+     * @param authentication The Authentication to get the UserDetails from.
+     * @return The UserDetails of the given Authentication.
+     */
+    private UserDetailsImpl getUserDetails(Authentication authentication) {
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        return (UserDetailsImpl) authentication.getPrincipal();
+    }
 
-        // Generate JWT token
+    /**
+     * Generates a JWT token for the given UserDetails.
+     * @param userDetails The UserDetails to generate the token for.
+     * @return The generated JWT token.
+     */
+    private String generateJwtToken(UserDetailsImpl userDetails) {
         ResponseCookie jwtCookie = jwtUtils.generateJwtCookie(userDetails);
-        String token = jwtCookie.getValue();
+        return jwtCookie.getValue();
+    }
 
-        // Update last login time and token
+    /**
+     * Updates the last login and token for the given UserDetails.
+     * @param userDetails The UserDetails to update.
+     * @param token The token to set.
+     */
+    private void updateUserLastLoginAndToken(UserDetailsImpl userDetails, String token) {
         Optional.ofNullable(userRepository.findById(userDetails.getId()).orElse(null))
                 .ifPresent(user -> {
                     user.setLastLogin(new Timestamp(System.currentTimeMillis()));
                     user.setToken(token); // Set the token
                     userRepository.save(user);
                 });
-
-        return userDetails;
     }
 
 
