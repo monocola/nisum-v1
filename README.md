@@ -96,7 +96,7 @@ POST /api/auth/signIn
 2. Builder
 3. Dto
 4. Factory
-5. AAA (Arrange, Act, Assert) para pruebas unitarias.
+5. AAA (Arrange, Act, Assert) para pruebas unitarias realizadas al 83% de cobertura.
 
 # Ejecución
 Para ejecutar la aplicación:
