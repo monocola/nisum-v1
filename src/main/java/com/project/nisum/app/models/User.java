@@ -1,5 +1,6 @@
 package com.project.nisum.app.models;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -31,6 +32,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Schema(description = "User")
 @Table(name = "users",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = "email")

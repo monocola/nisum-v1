@@ -18,6 +18,7 @@ public class OpenApiConfig {
      */
     @Bean
     public OpenAPI customOpenAPI() {
+
         return new OpenAPI()
                 .info(new Info()
                         .title("Api nisum to test")
@@ -28,4 +29,6 @@ public class OpenApiConfig {
                         .termsOfService("http://swagger.io/terms/")
                         .description("User Authentication and Registration API"));
     }
+
+
 }
